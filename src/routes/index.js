@@ -1,21 +1,23 @@
-import express from 'express';
-const router = express.Router();
+import usersRoute from "./usersRoute";
+import itemsRoute from "./itemsRoute";
+import categoriesRoute from "./categoriesRoute";
+import paymentsRoute from "./paymentsRoute";
+import discountCouponsRoute from "./discountCouponsRoute";
+import addressesRoute from "./addressesRoute";
+import ordersRoute from "./ordersRoute";
+import orderItemsRoute from "./orderItemsRoute";
+import cartsRoute from "./cartsRoute";
 
-// Importa y utiliza las rutas individuales aquí
-import usersRoutes from './usersRoutes';
-import paymentsRoutes from './paymentsRoutes';
-import cupomsRoutes from './cupomsRoutes';
-import categoriesRoutes from './categoriesRoutes';
-import addressesRoutes from './addressesRoutes';
-import productsRoutes from './productsRoutes';
-import ordersRoutes from './ordersRoutes';
+function Routes(app) {
+	usersRoute(app);
+	itemsRoute(app);
+	categoriesRoute(app);
+	paymentsRoute(app);
+	discountCouponsRoute(app);
+	addressesRoute(app);
+	ordersRoute(app);
+	orderItemsRoute(app)
+	cartsRoute(app)
+}
 
-router.use('/users', usersRoutes);
-router.use('/payments', paymentsRoutes);
-router.use('/cupoms', cupomsRoutes);
-router.use('/categories', categoriesRoutes);
-router.use('/addresses', addressesRoutes);
-router.use('/products', productsRoutes);
-router.use('/orders', ordersRoutes);
-
-export default router;
+export default Routes;

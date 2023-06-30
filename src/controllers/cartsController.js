@@ -2,10 +2,8 @@
 //responsavel por executar o que tiver que ser executado
 //as funcoes de lidar com o banco de dados
 //os cruds - GetAll, GetById, Persistir, Delete
-import Address from "../models/Address";
-import usersController from "./usersController"
-
-
+import Cart from "../models/Cart";
+import usersController from "./usersController";
 
 const get = async (req, res) => {
   try {
@@ -21,7 +19,9 @@ const get = async (req, res) => {
     }
 
     if (!id) {
-      let response = await Address.findAll({ where: { idUser: user.id } });
+      let response = await Cart.findAll({ include: ['item'], where: { idUser: user.id } });
+
+      
 
       return res.status(200).send({
         type: 'success',
@@ -30,7 +30,7 @@ const get = async (req, res) => {
       });
     };
 
-    let response = await Address.findOne({ where: { id, idUser: user.id } });
+    let response = await Cart.findOne({ where: { id, idUser: user.id } });
 
     if (!response) {
       return res.status(200).send({
@@ -66,26 +66,25 @@ const getById = async (req, res) => {
       });
     }
 
-    let address = await Address.findOne({
+    let cart = await Cart.findOne({
       where: {
         id
       }
     });
 
-    if (!address) {
+    if (!cart) {
       return res.status(200).send({
-        message: `No address found with the id ${id}`
+        message: `No cart found with the id ${id}`
       });
     }
 
-    return res.status(200).send(address);
+    return res.status(200).send(cart);
   } catch (error) {
     return res.status(200).send({
       message: error.message
     })
   }
 }
-
 const persist = async (req, res) => {
   let id = req.params.id ? req.params.id.toString().replace(/\D/g, '') : null;
   let user = await usersController.getUserByToken(req.headers.authorization);
@@ -96,6 +95,30 @@ const persist = async (req, res) => {
     })
   }
   
+  let idUser = JSON.stringify(user.id);
+
+  let { idItem, amount, price } = req.body;
+
+  let itemAlreadyOnCart = await Cart.findOne({
+    where: {
+      idUser,
+      idItem,
+      price,
+    }
+  })
+  
+  if (itemAlreadyOnCart) {
+    amount = Number(amount);
+    amount += Number(itemAlreadyOnCart.amount);
+    let updateOfTheItem = {
+      idItem,
+      amount,
+      price
+    }
+    return await update(itemAlreadyOnCart.id, updateOfTheItem, res, user)
+  }
+
+
   try {
     if (!id) {
       return await create(req.body, res, user)
@@ -111,14 +134,12 @@ const persist = async (req, res) => {
 }
 
 const create = async (dados, res, user) => {
-  let { address, street, neighborhood, number, complement} = dados;
-  let response = await Address.create({
+  let { idItem, amount, price} = dados;
+  let response = await Cart.create({
     idUser: user.id,
-    address,
-    street,
-    neighborhood,
-    number,
-    complement
+    idItem,
+    amount,
+    price
   });
 
   return res.status(200).send({
@@ -129,75 +150,60 @@ const create = async (dados, res, user) => {
 }
 
 const update = async (id, dados, res, user) => {
-  let response = await Address.findOne({ where: { id, idUser: user.id } });
+  let cart = await Cart.findOne({ where: { id, idUser: user.id } });
 
-  if (!response) {
+  if (!cart) {
     return res.status(200).send({
       type: 'error',
       message: `Nenhum registro com id ${id} para atualizar`,
       data: [] 
     });
   }
+  //update dos campos
+  Object.keys(dados).forEach(field => cart[field] = dados[field]); 
 
-  Object.keys(dados).forEach(field => response[field] = dados[field]);
-
-  await response.save();
+  await cart.save();
   return res.status(200).send({
-    type: 'sucess',
-    message: `Registro id ${id} atualizado com sucesso`,
-    data: response
+    message: `Cart ${id} successfully updated`,
+    data: cart
   });
 }
 
 const destroy = async (req, res) => {
   try {
-    let id = req.body.id ? req.body.id.toString().replace(/\D/g, '') : null;
-
-    let user = await usersController.getUserByToken(req.headers.authorization);
-
-    if (!user) {
-      return res.status(200).send({
-        type: 'error',
-        message: 'Ocorreu um erro ao recuperar os seus dados'
-      })
-    }
-
+    let { id } = req.body;
+    //garante que o id só vai ter NUMEROS;
+    id = id ? id.toString().replace(/\D/g, '') : null;
     if (!id) {
       return res.status(200).send({
-        type: 'error',
-        message: `Informe um id para deletar o registro`,
-        data: [] 
+        message: 'Enter a valid id to delete a cart'
       });
     }
 
-    let response = await Address.findOne({ where: { id, idUser: user.id } });
-
-    if (!response) {
-      return res.status(200).send({
-        type: 'error',
-        message: `Nenhum registro com id ${id} para deletar`,
-        data: [] 
-      });
-    }
-
-    await response.destroy();
-    return res.status(200).send({
-      type: 'success',
-      message: `Registro id ${id} deletado com sucesso`,
-      data: [] 
+    let cart = await Cart.findOne({
+      where: {
+        id
+      }
     });
+
+    if (!cart) {
+      return res.status(200).send({ message: `Cart with the id ${id} not found` })
+    }
+
+    await cart.destroy();
+    return res.status(200).send({
+      message: `Cart id ${id} successfully deleted`
+    })
   } catch (error) {
     return res.status(200).send({
-      type: 'error',
-      message: `Ops! Ocorreu um erro`,
-      error: error.message 
-    });
+      message: error.message
+    })
   }
 }
 
 export default {
-  getById,
   get,
+  getById,
   persist,
   destroy
 }; 

@@ -2,12 +2,12 @@
 //responsavel por executar o que tiver que ser executado
 //as funcoes de lidar com o banco de dados
 //os cruds - GetAll, GetById, Persistir, Delete
-import Category from "../models/Category";
+import DiscountCoupon from "../models/DiscountCoupon";
 
 const getAll = async (req, res) => {
   try {
-    const categories = await Category.findAll();
-    return res.status(200).send(categories);
+    const discount_coupons = await DiscountCoupon.findAll();
+    return res.status(200).send(discount_coupons);
   } catch (error) {
     return res.status(200).send({
       message: error.message
@@ -27,19 +27,19 @@ const getById = async (req, res) => {
       });
     }
 
-    let category = await Category.findOne({
+    let discount_coupon = await DiscountCoupon.findOne({
       where: {
         id
       }
     });
 
-    if (!category) {
+    if (!discount_coupon) {
       return res.status(200).send({
-        message: `No category found with the id ${id}`
+        message: `No discount coupon found with the id ${id}`
       });
     }
 
-    return res.status(200).send(category);
+    return res.status(200).send(discount_coupon);
   } catch (error) {
     return res.status(200).send({
       message: error.message
@@ -64,45 +64,34 @@ const persist = async (req, res) => {
 }
 
 const create = async (dados, res) => {
-  let { name } = dados;
+  let { coupon, discount } = dados;
 
-  let categoryExists = await Category.findOne({
-    where: {
-      name
-    }
+  let discountCoupon = await DiscountCoupon.create({
+    coupon,
+    discount
   });
-
-  if (categoryExists) {
-    return res.status(200).send({
-      message: 'There is already a category registered with that name'
-    })
-  }
-
-  let category = await Category.create({
-    name
-  });
-  return res.status(201).send(category)
+  return res.status(201).send(discountCoupon)
 }
 
 const update = async (id, dados, res) => {
-  let { name } = dados;
-  let category = await Category.findOne({
+  let { coupon, discount } = dados;
+  let discountCoupon = await DiscountCoupon.findOne({
     where: {
       id
     }
   });
 
-  if (!category) {
-    return res.status(200).send({ type: 'error', message: `No category found with the id ${id}` })
+  if (!discountCoupon) {
+    return res.status(200).send({ type: 'error', message: `No discount coupon found with the id ${id}` })
   }
 
   //update dos campos
-  Object.keys(dados).forEach(field => category[field] = dados[field]); 
+  Object.keys(dados).forEach(field => discountCoupon[field] = dados[field]); 
 
-  await category.save();
+  await discountCoupon.save();
   return res.status(200).send({
-    message: `Category ${id} successfully updated`,
-    data: category
+    message: `Discount coupon ${id} successfully updated`,
+    data: discountCoupon
   });
 }
 
@@ -113,23 +102,23 @@ const destroy = async (req, res) => {
     id = id ? id.toString().replace(/\D/g, '') : null;
     if (!id) {
       return res.status(200).send({
-        message: 'Enter a valid id to delete a category'
+        message: 'Enter a valid id to delete a discount coupon'
       });
     }
 
-    let category = await Category.findOne({
+    let discountCoupon = await DiscountCoupon.findOne({
       where: {
         id
       }
     });
 
-    if (!category) {
-      return res.status(200).send({ message: `Category with the id ${id} not found` })
+    if (!discountCoupon) {
+      return res.status(200).send({ message: `Discount coupon with the id ${id} not found` })
     }
 
-    await category.destroy();
+    await discountCoupon.destroy();
     return res.status(200).send({
-      message: `Category id ${id} successfully deleted`
+      message: `Discount coupon id ${id} successfully deleted`
     })
   } catch (error) {
     return res.status(200).send({

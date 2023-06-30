@@ -5,7 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import routes from './routes';
 import cors from 'cors';
-import fileupload from 'express-fileupload';
+require('./models/index');
 
 const app = express();
 
@@ -22,20 +22,16 @@ const corsOptions = {
   credentials: true
 };
 
-app.use(fileupload({
-  createParentPath: true
-}));
 app.use(cors(corsOptions));
 app.use(morgan('combined', { stream: accessLogStream }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use('/public', express.static('public'))
 
 routes(app);
 app.use((req, res) => {
-  res.status(404).send('404 - Página não encontrada')
+  res.status(200).send('404 - Página não encontrada')
 });
 
 app.listen(3333, () => {
-  console.log(`ABEX API running in 3333`);
+  console.log(`Servidor do CRStore rodando na porta 3333!`);
 });
