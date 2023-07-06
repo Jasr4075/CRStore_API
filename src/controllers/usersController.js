@@ -64,7 +64,6 @@ const register = async (req, res) => {
         message: 'Já existe um usuário cadastrado com esse username!'
       });
     }
-
     let passwordHash = await bcrypt.hash(password, 10);
 
     let response = await User.create({
@@ -106,7 +105,7 @@ const login = async (req, res) => {
     }
 
     let token = jwt.sign(
-      { userId: user.id, username: user.username }, //payload - dados utilizados na criacao do token
+      { userId: user.id, username: user.username }, //payload -->>> dados utilizados na criacao do token
       process.env.TOKEN_KEY, //chave PRIVADA da aplicação 
       { expiresIn: '999h' } //options ... em quanto tempo ele expira...
     );
@@ -153,10 +152,33 @@ const adminLogged = async (req, res) => {
   }
 }
 
+const deleteUser = async (req, res) => {
+  try {
+    let { id } = req.params;
+    let response = await User.destroy({
+      where: {
+        id
+      }
+    });
+    return res.status(200).send({
+      type: 'success',
+      message: 'Usuário deletado com sucesso!',
+      data: response
+    });
+  } catch (error) {
+    return res.status(200).send({
+      type: 'error',
+      message: 'Ocorreu um erro!',
+      data: error
+    });
+  }
+}
+
 export default {
   getAll,
   register,
   login,
   adminLogged,
-  getUserByToken
+  getUserByToken,
+  deleteUser
 }
