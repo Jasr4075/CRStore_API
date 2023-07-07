@@ -1,140 +1,84 @@
-
-//responsavel por executar o que tiver que ser executado
-//as funcoes de lidar com o banco de dados
-//os cruds - GetAll, GetById, Persistir, Delete
 import Category from "../models/Category";
 
 const getAll = async (req, res) => {
   try {
     const categories = await Category.findAll();
-    return res.status(200).send(categories);
+    return res.status(200).json(categories);
   } catch (error) {
-    return res.status(200).send({
-      message: error.message
-    })
+    return res.status(500).json({ error: error.message });
   }
 }
 
 const getById = async (req, res) => {
   try {
-    let { id } = req.params;
+    const { id } = req.params;
 
-    //garante que o id só vai ter NUMEROS;
-    id = id.replace(/\D/g, '');
     if (!id) {
-      return res.status(200).send({
-        message: 'Please enter a valid id for query'
-      });
+      return res.status(400).json({ message: 'Please provide a valid category ID' });
     }
 
-    let category = await Category.findOne({
-      where: {
-        id
-      }
-    });
+    const category = await Category.findByPk(id);
 
     if (!category) {
-      return res.status(200).send({
-        message: `No category found with the id ${id}`
-      });
+      return res.status(404).json({ message: `Category with ID ${id} not found` });
     }
 
-    return res.status(200).send(category);
+    return res.status(200).json(category);
   } catch (error) {
-    return res.status(200).send({
-      message: error.message
-    })
+    return res.status(500).json({ error: error.message });
   }
 }
 
 const persist = async (req, res) => {
   try {
-    let { id } = req.params;
-    //caso nao tenha id, cria um novo registro
+    const { id } = req.params;
+    const { name } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ message: 'Please provide a name for the category' });
+    }
+
     if (!id) {
-      return await create(req.body, res)
-    }
+      // Crear una nueva categoría
+      const category = await Category.create({ name });
+      return res.status(201).json(category);
+    } else {
+      // Actualizar una categoría existente
+      const category = await Category.findByPk(id);
 
-    return await update(id, req.body, res)
+      if (!category) {
+        return res.status(404).json({ message: `Category with ID ${id} not found` });
+      }
+
+      category.name = name;
+      await category.save();
+
+      return res.status(200).json(category);
+    }
   } catch (error) {
-    return res.status(200).send({
-      message: error.message
-    })
+    return res.status(500).json({ error: error.message });
   }
-}
-
-const create = async (dados, res) => {
-  let { name } = dados;
-
-  let categoryExists = await Category.findOne({
-    where: {
-      name
-    }
-  });
-
-  if (categoryExists) {
-    return res.status(200).send({
-      message: 'There is already a category registered with that name'
-    })
-  }
-
-  let category = await Category.create({
-    name
-  });
-  return res.status(201).send(category)
-}
-
-const update = async (id, dados, res) => {
-  let { name } = dados;
-  let category = await Category.findOne({
-    where: {
-      id
-    }
-  });
-
-  if (!category) {
-    return res.status(200).send({ type: 'error', message: `No category found with the id ${id}` })
-  }
-
-  //update dos campos
-  Object.keys(dados).forEach(field => category[field] = dados[field]); 
-
-  await category.save();
-  return res.status(200).send({
-    message: `Category ${id} successfully updated`,
-    data: category
-  });
 }
 
 const destroy = async (req, res) => {
   try {
-    let { id } = req.body;
-    //garante que o id só vai ter NUMEROS;
-    id = id ? id.toString().replace(/\D/g, '') : null;
+    const { id } = req.body;
+
     if (!id) {
-      return res.status(200).send({
-        message: 'Enter a valid id to delete a category'
-      });
+      return res.status(400).json({ message: 'Please provide a valid category ID' });
     }
 
-    let category = await Category.findOne({
-      where: {
-        id
-      }
-    });
+    const category = await Category.findByPk(id);
 
     if (!category) {
-      return res.status(200).send({ message: `Category with the id ${id} not found` })
+      return res.status(404).json({ message: `Category with ID ${id} not found` });
     }
 
     await category.destroy();
-    return res.status(200).send({
-      message: `Category id ${id} successfully deleted`
-    })
+
+    return res.status(200).json({ message: `Category with ID ${id} successfully deleted` });
   } catch (error) {
-    return res.status(200).send({
-      message: error.message
-    })
+    return res.status(500).json({ error: error.message });
   }
 }
 
@@ -143,4 +87,4 @@ export default {
   getById,
   persist,
   destroy
-}; 
+};
