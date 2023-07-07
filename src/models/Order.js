@@ -4,26 +4,26 @@ import DiscountCoupon from "./DiscountCoupon";
 import User from "./User";
 import Payment from "./Payment"
 
-const Order = sequelize.define(
-  'orders',
-  {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true
+    const Order = sequelize.define(
+    'orders',
+    {
+        id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+        },
+        totalPrice: {
+            type: DataTypes.NUMERIC(15,2),
+            allowNull: false,
+            field: "total_price"
+        }
     },
-    totalPrice: {
-        type: DataTypes.NUMERIC(15,2),
-        allowNull: false,
-        field: "total_price"
+    {
+        freezeTableName: true,
+        timestamps: true,
+        createdAt: 'created_at',
+        updatedAt: 'updated_at'
     }
-  },
-  {
-    freezeTableName: true,
-    timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at'
-  }
 );
 
 Order.belongsTo(User, {
