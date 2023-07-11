@@ -81,10 +81,27 @@ const destroy = async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 }
+const create = async (req, res) => {
+  try {
+    const { name } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ message: 'Please provide a name for the category' });
+    }
+
+    const category = await Category.create({ name });
+
+    return res.status(201).json(category);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+}
 
 export default {
   getAll,
   getById,
   persist,
-  destroy
+  destroy,
+  create // Agrega esta función al controlador
 };
+
