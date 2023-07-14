@@ -3,11 +3,12 @@ import Category from "../models/Category";
 const getAll = async (req, res) => {
   try {
     const categories = await Category.findAll();
-    return res.status(200).json(categories);
+    return res.status(200).json({ categories }); // Devolver un objeto con la propiedad 'categories'
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
 }
+
 
 const getById = async (req, res) => {
   try {
